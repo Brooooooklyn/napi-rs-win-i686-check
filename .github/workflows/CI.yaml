@@ -1,0 +1,61 @@
+name: Windows i686
+
+env:
+  DEBUG: 'napi:*'
+
+on:
+  push:
+
+jobs:
+  build_and_test:
+    name: stable - windows-latest - i686 - node@16
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          check-latest: true
+          architecture: 'x86'
+          cache: 'yarn'
+
+      - name: 'Install dependencies'
+        run: yarn install --frozen-lockfile --registry https://registry.npmjs.org --network-timeout 300000
+
+      - name: 'Build TypeScript'
+        run: yarn build
+
+      - name: Install
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: i686-pc-windows-msvc
+
+      - name: Generate Cargo.lock
+        uses: actions-rs/cargo@v1
+        with:
+          command: generate-lockfile
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: stable-windows-i686-node@lts-cargo-registry-trimmed-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/git
+          key: stable-windows-i686-node@lts-cargo-index-trimmed-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build Tests
+        run: |
+          yarn build
+          node test.js
+        env:
+          RUST_BACKTRACE: 1
