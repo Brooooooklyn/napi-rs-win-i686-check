@@ -25,9 +25,6 @@ jobs:
       - name: 'Install dependencies'
         run: yarn install --frozen-lockfile --registry https://registry.npmjs.org --network-timeout 300000
 
-      - name: 'Build TypeScript'
-        run: yarn build
-
       - name: Install
         uses: actions-rs/toolchain@v1
         with:
